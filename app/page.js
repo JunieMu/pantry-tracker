@@ -3,12 +3,15 @@ import Image from "next/image";
 import {useState, useEffect} from 'react'
 import {firestore} from '@/firebase'
 import { Box, Modal, Typography, Stack, TextField, Button } from "@mui/material";
-import {collection, doc, deleteDoc, getDocs, query, getDoc, setDoc} from 'firebase/firestore'
+import {collection, doc, deleteDoc, getDocs, query, getDoc, setDoc} from 'firebase/firestore';
+import InputAdornment from '@mui/material/InputAdornment';
+import Search from '@mui/icons-material/Search';
 
 export default function Home() {
   const [inventory, setInventory] = useState([])
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'))
@@ -58,6 +61,10 @@ export default function Home() {
   useEffect(() => {
     updateInventory()
   }, [])
+
+  const filteredInventory = inventory.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
@@ -111,17 +118,31 @@ export default function Home() {
         </Box>
 
       </Modal>
-      <Button variant="contained" onClick={() => {
+      <Button variant="contained" color="secondary" onClick={() => {
         handleOpen()
       }}>
       Add New Item
       </Button>
+      <TextField
+        variant="standard"
+        placeholder="Search..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{width: '800px'}}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search />
+            </InputAdornment>
+          ),
+        }}
+      />
       <Box border="1px solid #333">
         <Box
         width="800px"
         height="100px"
         display="flex"
-        bgcolor="#ADD8E6"
+        bgcolor="#c471c7"
         alignItems="center" 
         justifyContent="center">
           <Typography variant="h2" color="#333">Inventory Items</Typography>
@@ -129,7 +150,7 @@ export default function Home() {
       
       <Stack width="800px" height="300px" spacing={2} overflow="auto">
         {
-          inventory.map(({name, quantity}) => (
+          filteredInventory.map(({name, quantity}) => (
             <Box key={name} width="100%" minHeight="150px" display="flex" alignItems="center" justifyContent="space-between" bgcolor="white" padding={5}>
               <Typography variant="h3" color="#333" textAlign="center">
                 {name.charAt(0).toUpperCase() + name.slice(1)}
@@ -138,10 +159,10 @@ export default function Home() {
                 {quantity}
               </Typography>
               <Stack direction="row" spacing={2}>
-                <Button variant="contained" onClick={() => {
+                <Button variant="contained" color="secondary" onClick={() => {
                   addItem(name)
                 }}>Add</Button>
-                <Button variant="contained" onClick={() => {
+                <Button variant="contained" color="secondary" onClick={() => {
                   removeItem(name)
                 }}>Remove</Button>
               </Stack>
